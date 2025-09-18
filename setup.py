@@ -10,8 +10,8 @@ setup(
     packages=find_packages(),
     install_requires=[
         'numpy>=1.21.2',
-        'scipy==1.7.3',
-        'pandas==1.3.4',
+        'scipy>=1.7.3',
+        'pandas>=1.3.4',
         'cython>=0.29.24',
         'torch>=1.8.0',
         'fbpca',

@@ -17,7 +17,7 @@ except:
 import argparse
 import resource
 from scipy.sparse import csr_matrix
-from scipy.sparse.csr import get_csr_submatrix
+# removed
 from sklearn.preprocessing import StandardScaler
 import pickle
 import subprocess
