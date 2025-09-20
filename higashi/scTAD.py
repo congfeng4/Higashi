@@ -139,8 +139,8 @@ def calibrate_tad(chrom, sc_score, sc_border, sc_border_indice, bulk_score, bulk
 def start_call_tads():
     p_list = []
     calib_p_list = []
-    pool = ProcessPoolExecutor(max_workers=3)
-    calib_pool = ProcessPoolExecutor(max_workers=23)
+    pool = ThreadPoolExecutor(max_workers=3)
+    calib_pool = ThreadPoolExecutor(max_workers=23)
     output = args.output
     if ".hdf5" not in output:
         output += ".hdf5"

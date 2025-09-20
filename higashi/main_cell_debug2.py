@@ -2,6 +2,8 @@ import multiprocessing as mp
 import time
 import warnings
 import torch.optim
+from scipy.sparse._sparsetools import get_csr_submatrix
+
 from Higashi_backend.Modules import *
 from Higashi_backend.Functions import *
 from Higashi_backend.utils import *
@@ -1027,7 +1029,7 @@ if __name__ == '__main__':
         impute_pool = None
     else:
         non_para_impute = False
-        impute_pool = ProcessPoolExecutor(max_workers=gpu_num)
+        impute_pool = ThreadPoolExecutor(max_workers=gpu_num)
 
     weighted_adj = False
     dimensions = config['dimensions']
@@ -1440,7 +1442,7 @@ if __name__ == '__main__':
                 # time.sleep(30)
                 impute_pool.shutdown(wait=True)
 
-                impute_pool = ProcessPoolExecutor(max_workers=gpu_num)
+                impute_pool = ThreadPoolExecutor(max_workers=gpu_num)
                 linkhdf5("%s_nbr_%d_impute" % (embedding_name, 0), cell_id_all, temp_dir, impute_list, None)
 
     if impute_with_nbr_flag:

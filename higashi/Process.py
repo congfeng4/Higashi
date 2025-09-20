@@ -16,7 +16,7 @@ import torch.nn.functional as F
 from tqdm import tqdm, trange
 from scipy.sparse import csr_matrix, vstack, SparseEfficiencyWarning, diags, \
     hstack
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import h5py
 
 from sklearn.decomposition import PCA, TruncatedSVD
@@ -217,7 +217,7 @@ def extract_table(config):
                 cell_tab = []
 
                 p_list = []
-                pool = ProcessPoolExecutor(max_workers=cpu_num)
+                pool = ThreadPoolExecutor(max_workers=cpu_num)
                 print("First calculating how many lines are there")
                 line_count = sum(1 for i in open(os.path.join(data_dir, "data.txt"), 'rb'))
                 print("There are %d lines" % line_count)
@@ -284,7 +284,7 @@ def extract_table(config):
         bar = trange(len(filelist))
 
         p_list = []
-        pool = ProcessPoolExecutor(max_workers=cpu_num)
+        pool = ThreadPoolExecutor(max_workers=cpu_num)
 
         for cell_id, file in enumerate(filelist):
             p_list.append(pool.submit(data2triplets, config, (file, cell_id), chrom_start_end, False))
@@ -510,7 +510,7 @@ def create_matrix(config, disable_mpl=False):
 
     data_within_chrom_list = []
     weight_within_chrom_list = []
-    pool = ProcessPoolExecutor(max_workers=cpu_num)
+    pool = ThreadPoolExecutor(max_workers=cpu_num)
     p_list = []
 
     cell_feats = [[] for i in range(len(chrom_list))]
@@ -752,7 +752,7 @@ def create_matrix(config, disable_mpl=False):
             chrom2celladj[c] = cell_adj_all
             total_linear_chrom_size += int(math.sqrt(list(cell_adj_all[0].shape)[-1]) * res_cell / 1000000)
         # print (total_linear_chrom_size)
-        # pool = ProcessPoolExecutor(max_workers=cpu_num)
+        # pool = ThreadPoolExecutor(max_workers=cpu_num)
         if len(chrom_list) > 1:
             total_embed_size = min(max(int(cell_adj_all[0].shape[0] * 0.5), int(total_linear_chrom_size * 0.5)),
                                    int(cell_adj_all[0].shape[0] * 0.65))
@@ -1093,7 +1093,7 @@ def process_signal(config):
     signal_all = PCA(n_components=int(np.min(signal_all.shape) * 0.8)).fit_transform(signal_all)
     np.save(os.path.join(temp_dir, "temp", "coassay_all.npy"), signal_all)
 
-    pool = ProcessPoolExecutor(max_workers=int(gpu_num * 1.2))
+    pool = ThreadPoolExecutor(max_workers=int(gpu_num * 1.2))
     for chrom in chrom_list:
         pool.submit(process_signal_one, chrom)
         time.sleep(3)

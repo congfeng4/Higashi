@@ -40,7 +40,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from PIL import Image
 import json
 import pickle
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 try:
     from cachetools import LRUCache
@@ -427,7 +427,7 @@ async def async_heatmap_all(selected):
     # else:
     if len(mask) != origin_sparse[0].shape[0]:
         mask, bulk = create_mask(k=max_bin)
-    pool = ProcessPoolExecutor(max_workers=5)
+    pool = ThreadPoolExecutor(max_workers=5)
     p_list = []
     p_list.append(pool.submit(async_heatmap11, selected, 0))
     p_list.append(pool.submit(async_heatmap12, selected, 1))

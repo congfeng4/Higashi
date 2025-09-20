@@ -11,7 +11,7 @@ except:
     pass
 from sklearn.metrics import average_precision_score
 from sklearn.metrics import roc_auc_score, pairwise_distances
-from concurrent.futures import as_completed, ProcessPoolExecutor
+from concurrent.futures import as_completed, ThreadPoolExecutor
 from copy import deepcopy
 from scipy.stats import pearsonr, spearmanr
 import json
@@ -156,7 +156,7 @@ def parallel_build_hash(data, func, num, initial=None, compress=False):
     print("dict building", data.shape)
     # data = np.array_split(data, cpu_num*5)
     dict1 = deepcopy(initial)
-    pool = ProcessPoolExecutor(max_workers=cpu_num)
+    pool = ThreadPoolExecutor(max_workers=cpu_num)
     process_list = []
 
     if func == 'build_hash':
@@ -256,7 +256,7 @@ def linkhdf5_one_chrom(chrom, name, cell_id_splits, temp_dir, impute_list, name2
 
 def linkhdf5(name, cell_id_splits, temp_dir, impute_list, name2=None):
     print("start linking hdf5 files")
-    pool = ProcessPoolExecutor(max_workers=3)
+    pool = ThreadPoolExecutor(max_workers=3)
     for chrom in tqdm(impute_list):
         # linkhdf5_one_chrom( chrom, name, np.copy(cell_id_splits), temp_dir, impute_list, name2)
         pool.submit(linkhdf5_one_chrom, chrom, name, np.copy(cell_id_splits), temp_dir, impute_list, name2)

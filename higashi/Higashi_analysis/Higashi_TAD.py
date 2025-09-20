@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.signal import argrelextrema
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import multiprocessing
 from tqdm import tqdm, trange
 
@@ -137,7 +137,7 @@ class scTAD_calibrator():
             search_range = np.stack([search_range_left, search_range_right], axis=-1)
 
             change = 0
-            pool = ProcessPoolExecutor(max_workers=5)
+            pool = ThreadPoolExecutor(max_workers=5)
             p_list = []
             # Update center
             bar = trange(len(self.shared_boundaries),

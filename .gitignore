@@ -1,3 +1,8 @@
 ./config_dir/
 higashi/.DS_Store
 higashi/Higashi_backend/.DS_Store
+.idea
+*.npy
+*.egg-info
+/Data
+/Temp

@@ -236,7 +236,7 @@ def process_calib_file(file_path):
 
 def start_call_compartment():
     p_list = []
-    pool = ProcessPoolExecutor(max_workers=10)
+    pool = ThreadPoolExecutor(max_workers=10)
     output = args.output
     if ".hdf5" not in output:
         output += ".hdf5"

@@ -16,7 +16,7 @@ import torch.nn.functional as F
 from tqdm import tqdm, trange
 from scipy.sparse import csr_matrix, vstack, SparseEfficiencyWarning, diags, \
     hstack
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import h5py
 
 from sklearn.decomposition import PCA, TruncatedSVD
@@ -181,7 +181,7 @@ def extract_table(config):
         bar = trange(len(filelist))
         mtx_all_list = [[0] * len(filelist) for i in range(len(chrom_list))]
         p_list = []
-        pool = ProcessPoolExecutor(max_workers=cpu_num)
+        pool = ThreadPoolExecutor(max_workers=cpu_num)
         for cell_id, file in enumerate(filelist):
             p_list.append(pool.submit(data2mtx, config, file, chrom_start_end, False, cell_id))
 

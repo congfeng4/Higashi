@@ -1,5 +1,5 @@
 import numpy as np
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import multiprocessing
 from sklearn.decomposition import PCA
 from scipy.sparse import csr_matrix

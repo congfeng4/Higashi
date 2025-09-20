@@ -1,6 +1,7 @@
 import multiprocessing as mp
 import warnings
 import torch.optim
+from scipy.sparse._sparsetools import get_csr_submatrix
 
 try:
     from .Higashi_backend.Modules import *
@@ -34,6 +35,12 @@ except:
 
 torch.backends.cudnn.benchmark = True
 torch.set_default_dtype(torch.float32)
+
+# 模块级统一初始化（多进程安全：先让名字存在）
+pair_ratio = weighted_adj = num = num_list = start_end_dict = mem_efficient_flag = None
+neg_num = max_bin = mode = graphsagemode = precompute_weighted_nbr = None
+cell_neighbor_list = cell_neighbor_weight_list = None
+sparse_chrom_list_GCN = sparse_chrom_list_dict = sparse_chrom_list = None
 
 
 def parse_args():
@@ -88,6 +95,8 @@ def check_nonzero(x, c):
             M, N, mtx.indptr, mtx.indices, mtx.data, row_start, row_end, col_start, col_end)
     except:
         print(M, N, num_list[c], x[1], row_start, row_end, x[2], col_start, col_end, mem_efficient_flag)
+        raise
+
     a = len(nbr_value) > 0
 
     return a
@@ -236,7 +245,7 @@ def sum_duplicates(col, data):
 
 def one_thread_generate_neg(edges_part, edges_chrom, edge_weight,
                             collect_num=1, training=False, chroms_in_batch=None):
-    # global sparse_chrom_list_GCN, neg_num
+    global sparse_chrom_list_GCN, neg_num
     if neg_num == 0:
         y = np.ones((len(edges_part), 1))
         w = np.ones((len(edges_part), 1)) * edge_weight.reshape((-1, 1))
@@ -1043,7 +1052,7 @@ class Higashi():
 
             bar = tqdm(range(self.update_num_per_eval_epoch), desc='  - (Validation)   ', leave=False)
             if p_list is None:
-                pool = ProcessPoolExecutor(max_workers=self.cpu_num)
+                pool = ThreadPoolExecutor(max_workers=self.cpu_num)
                 p_list = []
 
                 for i in range(self.update_num_per_eval_epoch):
@@ -1104,9 +1113,9 @@ class Higashi():
         if save_embed:
             self.save_embeddings()
 
-        eval_pool = ProcessPoolExecutor(max_workers=self.cpu_num)
+        eval_pool = ThreadPoolExecutor(max_workers=self.cpu_num)
 
-        train_pool = ProcessPoolExecutor(max_workers=self.cpu_num)
+        train_pool = ThreadPoolExecutor(max_workers=self.cpu_num)
         train_p_list = []
 
         for epoch_i in range(epochs):
@@ -1442,7 +1451,7 @@ class Higashi():
                            self.num[0],
                            os.path.join(self.temp_dir, "sparse_nondiag_adj_nbr_1.npy"))
         else:
-            impute_pool = ProcessPoolExecutor(max_workers=self.gpu_num)
+            impute_pool = ThreadPoolExecutor(max_workers=self.gpu_num)
             torch.save(self.higashi_model, self.save_path + "_stage2_model")
             cell_id_all = np.arange(self.num[0])
             cell_id_all = np.array_split(cell_id_all, self.gpu_num - 1)
@@ -1561,7 +1570,7 @@ class Higashi():
                            self.num[0], os.path.join(self.temp_dir, "sparse_nondiag_adj_nbr_1.npy"),
                            os.path.join(self.temp_dir, "weighted_info.npy"))
         else:
-            impute_pool = ProcessPoolExecutor(max_workers=self.gpu_num)
+            impute_pool = ThreadPoolExecutor(max_workers=self.gpu_num)
             select_gpus = get_free_gpu(self.gpu_num - 1, change_cur=False)
             print("select gpus", select_gpus)
             torch.save(self.higashi_model, self.save_path + "_stage3_model")
