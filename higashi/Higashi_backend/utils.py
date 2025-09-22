@@ -80,7 +80,7 @@ def roc_auc_cuda(y_true, y_pred):
     except BaseException:
         try:
             return pearsonr(y_true.reshape((-1)), y_pred.reshape((-1)))[0], \
-            spearmanr(y_true.reshape((-1)), y_pred.reshape((-1)))[0], "pearson", "spearman"
+                spearmanr(y_true.reshape((-1)), y_pred.reshape((-1)))[0], "pearson", "spearman"
         except:
             return 0.0, 0.0, "error", "error"
 

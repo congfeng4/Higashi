@@ -266,7 +266,7 @@ def start_call_compartment():
 
         for chrom in chrom_list:
             real_bulk_compartment, bulk_compartment, temp_compartment_list, temp_compartment_zscore, temp_compartment_quantile, use_rows, size = \
-            result[chrom]
+                result[chrom]
             # print (use_rows)
             length = size
             bin_chrom_list += [chrom] * len(use_rows)

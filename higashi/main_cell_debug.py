@@ -1573,7 +1573,7 @@ if __name__ == '__main__':
                 impute_pool.shutdown(wait=True)
 
                 extra_str = "%s_nbr_%d_impute" % (embedding_name, 0) if (
-                            impute_no_nbr_flag and nbr_mode == 1 and not remove_be_flag) else None
+                        impute_no_nbr_flag and nbr_mode == 1 and not remove_be_flag) else None
 
                 # When the 1nb imputation is there and nbr_mode=1 (itself is not included during learning), add the predicted values with only 1nb to the neighbor version.
                 linkhdf5("%s_nbr_%d_impute" % (embedding_name, neighbor_num - 1), cell_id_all, temp_dir, impute_list,

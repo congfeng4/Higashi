@@ -122,7 +122,7 @@ def data2triplets(config, data, chrom_start_end, verbose):
             tab['count'] = 1
         data = tab
         data = data[(((np.abs(data['pos2'] - data['pos1']) >= 2500) | (np.abs(data['pos2'] - data['pos1']) == 0)) & (
-                    data['chrom1'] == data['chrom2'])) | (
+                data['chrom1'] == data['chrom2'])) | (
                             data['chrom1'] != data['chrom2'])].reset_index()
 
     pos1 = np.array(data['pos1'])
@@ -315,9 +315,6 @@ def extract_table(config):
             inter_data = np.concatenate(inter_data_all, axis=0)
             inter_count = np.concatenate(inter_count_all, axis=0)
         bar.close()
-
-
-
     else:
         print("invalid input format")
         raise EOFError

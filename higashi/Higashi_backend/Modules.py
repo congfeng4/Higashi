@@ -1496,8 +1496,6 @@ class GraphSageEncoder_with_weights(nn.Module):
             neigh_feats = self.bin_feats[nodes_flatten, :].view(sz_b, len_seq - 1, -1)
             if tr > 0:
                 neigh_feats_linear = self.bin_feats_linear[nodes_flatten, :].view(sz_b, len_seq - 1, -1)
-
-
         else:
             if len(nodes.shape) == 1:
 

@@ -290,8 +290,8 @@ def impute_process(config_path, model, name, mode, cell_start, cell_end, sparse_
                                                                                              cell_end - cell_start,
                                                                                              time.time() - start,
                                                                                              (
-                                                                                                         time.time() - start) / count * (
-                                                                                                         cell_end - cell_start - count)))
+                                                                                                     time.time() - start) / count * (
+                                                                                                     cell_end - cell_start - count)))
 
     print("finish imputing, used %.2f s" % (time.time() - start))
     embedding_init.on_hook()
