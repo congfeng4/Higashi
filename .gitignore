@@ -6,3 +6,5 @@ higashi/Higashi_backend/.DS_Store
 *.egg-info
 /Data
 /Temp
+__pycache__
+*.txt
