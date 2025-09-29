@@ -495,7 +495,7 @@ class AutoEncoder(nn.Module):
 # Multiple Embedding is a module that passes nodes to different branch of neural network to generate embeddings
 # The neural network to use would be dependent to the node ids (the input num_list parameters)
 # If the num_list is [0, 1000, 2000,...,]
-# Then node 0~1000 would pass through NN1, 1000~200 would pass through NN2...
+# Then node 0~1000 would pass through NN1, 1000~2000 would pass through NN2...
 # target weights represent the auxilary task that the embedding would do.
 class MultipleEmbedding(nn.Module):
     def __init__(self, embedding_weights, dim, sparse=True, num_list=None, target_weights=None):
@@ -800,7 +800,6 @@ class Hyper_SAGNN(nn.Module):
                             j * batch_size:min((j + 1) * batch_size, len(input))]
 
                     x = np2tensor_hyper(x, dtype=torch.long)
-
                     if len(x.shape) == 1:
                         x = pad_sequence(x, batch_first=True, padding_value=0).to(device, non_blocking=True)
                     else:
