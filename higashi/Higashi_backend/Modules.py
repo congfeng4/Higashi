@@ -667,6 +667,10 @@ class Hyper_SAGNN(nn.Module):
 
         self.pff_classifier = PositionwiseFeedForward(
             [d_model, int(d_model / 2), 1])
+        self.pff_classifier_p = PositionwiseFeedForward(
+            [d_model, int(d_model / 2), 1])
+        self.pff_classifier_m = PositionwiseFeedForward(
+            [d_model, int(d_model / 2), 1])
         self.pff_classifier_var = PositionwiseFeedForward(
             [d_model, int(d_model / 2), 1])
         self.pff_classifier_proba = PositionwiseFeedForward(
@@ -735,48 +739,58 @@ class Hyper_SAGNN(nn.Module):
                 distance_proba = self.extra_proba(distance)
                 distance_proba2 = self.extra_proba2(distance)
                 distance_proba3 = self.extra_proba3(distance)
-
         else:
             distance_proba = torch.zeros((len(x), 1), dtype=torch.float, device=device)
             distance_proba2 = torch.zeros((len(x), 1), dtype=torch.float, device=device)
             distance_proba3 = torch.zeros((len(x), 1), dtype=torch.float, device=device)
 
-        if not self.only_distance:
-            # slf_attn_mask = get_attn_key_pad_mask(seq_k=x, seq_q=x)
-            # non_pad_mask = get_non_pad_mask(x)
-
-            dynamic, static = self.get_embedding(x, x_chrom, chroms_in_batch=chroms_in_batch)
-            dynamic = self.layer_norm1(dynamic)
-            static = self.layer_norm2(static)
-
-            if self.diag_mask_flag:
-                output = (dynamic - static) ** 2
-            else:
-                output = dynamic
-
-            output_proba = self.pff_classifier_proba(static)
-            # output_proba = torch.sum(output_proba * non_pad_mask, dim=-2, keepdim=False)
-            # mask_sum = torch.sum(non_pad_mask, dim=-2, keepdim=False)
-            # output_proba /= mask_sum
-            output_proba = torch.mean(output_proba, dim=-2, keepdim=False)
-            output_proba = output_proba + distance_proba
-
-            output_mean = self.pff_classifier(output)
-
-            # output_mean = torch.sum(output_mean * non_pad_mask, dim=-2, keepdim=False)
-            # output_mean /= mask_sum
-            output_mean = torch.mean(output_mean, dim=-2, keepdim=False)
-
-            output_var = self.pff_classifier_var(static)
-            # output_var = torch.sum(output_var * non_pad_mask, dim=-2, keepdim=False)
-            # output_var /= mask_sum
-            output_var = torch.mean(output_var, dim=-2, keepdim=False)
-            output_mean = output_mean + distance_proba2
-            output_var = output_var + distance_proba3
-
-        else:
+        if self.only_distance:
             return distance_proba2, distance_proba3, distance_proba
-        return output_mean, output_var, output_proba
+
+        # slf_attn_mask = get_attn_key_pad_mask(seq_k=x, seq_q=x)
+        # non_pad_mask = get_non_pad_mask(x)
+
+        dynamic, static = self.get_embedding(x, x_chrom, chroms_in_batch=chroms_in_batch)
+        dynamic = self.layer_norm1(dynamic)
+        static = self.layer_norm2(static)
+
+        if self.diag_mask_flag:
+            output = (dynamic - static) ** 2
+        else:
+            output = dynamic
+
+        output_proba = self.pff_classifier_proba(static)
+        # output_proba = torch.sum(output_proba * non_pad_mask, dim=-2, keepdim=False)
+        # mask_sum = torch.sum(non_pad_mask, dim=-2, keepdim=False)
+        # output_proba /= mask_sum
+        output_proba = torch.mean(output_proba, dim=-2, keepdim=False)
+        output_proba = output_proba + distance_proba
+
+        output_mean = self.pff_classifier(output)
+        # output_mean = torch.sum(output_mean * non_pad_mask, dim=-2, keepdim=False)
+        # output_mean /= mask_sum
+        output_mean = torch.mean(output_mean, dim=-2, keepdim=False)
+
+        # Paternl
+        output_mean_p = self.pff_classifier_p(output)
+        output_mean_p = torch.mean(output_mean_p, dim=-2, keepdim=False)
+
+        # Maternel
+        output_mean_m = self.pff_classifier_m(output)
+        output_mean_m = torch.mean(output_mean_m, dim=-2, keepdim=False)
+
+        # Recombined P+M
+        output_mean_sum = output_mean_p + output_mean_m
+        output_mean_sum = output_mean_sum + distance_proba
+
+        output_var = self.pff_classifier_var(static)
+        # output_var = torch.sum(output_var * non_pad_mask, dim=-2, keepdim=False)
+        # output_var /= mask_sum
+        output_var = torch.mean(output_var, dim=-2, keepdim=False)
+        output_mean = output_mean + distance_proba2
+        output_var = output_var + distance_proba3
+
+        return output_mean, output_var, output_proba, (output_mean_p, output_mean_m, output_mean_sum)
 
     def predict(self, input, input_chrom, verbose=False, batch_size=96, activation=None, extra_info=None):
         self.eval()

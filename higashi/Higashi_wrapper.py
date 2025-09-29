@@ -103,6 +103,7 @@ def check_nonzero(x, c):
 
 
 def generate_negative_cpu(x, x_chrom, neg_num, max_bin, forward=True):
+    global steps
     rg = np.random.default_rng()
     neg_list, neg_chrom = np.zeros((x.shape[0] * neg_num, x.shape[1]), dtype='int'), \
         np.zeros((x.shape[0] * neg_num), dtype='int8')
@@ -866,7 +867,9 @@ class Higashi():
         x = batch_data
         w = batch_weight
         # plus one, because chr1 - id 0 - NN1
-        pred, pred_var, pred_proba = model(x, (batch_chrom, batch_to_neighs), chroms_in_batch=chroms_in_batch + 1)
+        # pred, pred_var, pred_proba = model(x, (batch_chrom, batch_to_neighs), chroms_in_batch=chroms_in_batch + 1)
+        pred, pred_var, pred_proba, (pred_p, pred_m, pred_sum) = model(x, (batch_chrom, batch_to_neighs),\
+                                                                     chroms_in_batch=chroms_in_batch + 1)
 
         if self.use_recon:
             adj = self.node_embedding_init.embeddings[0](self.cell_ids).float()
@@ -909,8 +912,18 @@ class Higashi():
             pred = pred.float().view(-1)
             w = w.float().view(-1)
             main_loss = F.mse_loss(pred, w)
+        elif self.mode == 'phasing':
+            pred = F.softplus(pred_sum)
+            extra = (self.cell_feats1[batch_data[:, 0] - 1]).view(-1, 1)
+            pred = pred * extra
+            pred_var = F.softplus(pred_var)
+
+            pred = torch.clamp(pred, min=1e-8, max=1e8)
+            pred_var = torch.clamp(pred_var, min=1e-8, max=1e8)
+            main_loss = -log_zinb_positive(w.float(), pred.float(), pred_var.float(), pred_proba.float())
+            main_loss = main_loss.mean()
         else:
-            print("wrong mode")
+            print("wrong mode", self.mode)
             raise EOFError
         return pred, main_loss, mse_loss
 
@@ -1438,6 +1451,102 @@ class Higashi():
 
         torch.save(checkpoint, self.save_path + "_stage2")
         torch.save(self.higashi_model, self.save_path + "_stage2_model")
+
+    def train_for_phasing(self):
+        global steps, pair_ratio
+        # 加载 stage1 模型
+        del self.higashi_model
+        self.higashi_model = torch.load(self.save_path + "_stage1_model", map_location=self.current_device)
+        self.node_embedding_init = self.higashi_model.encode1.static_nn
+        self.save_embeddings()
+
+        # 设置训练参数
+        self.alpha = 1.0
+        self.beta = 1e-3
+        self.use_recon = False
+        self.contractive_flag = False
+        self.contractive_loss_weight = 0.0
+        self.dynamic_pair_ratio = False
+
+        if mem_efficient_flag:
+            pair_ratio = 0.5
+        else:
+            pair_ratio = 0.0
+
+        self.mode = 'phasing'
+        steps = 4
+
+        # 设置距离范围
+        max_distance = self.config.get('maximum_distance', -1)
+        min_distance = self.config.get('minimum_distance', -1)
+        max_bin = int(max_distance / self.res) if max_distance > 0 else int(1e5)
+        min_bin = int(min_distance / self.res) if min_distance > 0 else 0
+        self.training_data_generator.filter_edges(min_bin, max_bin)
+        self.validation_data_generator.filter_edges(min_bin, max_bin)
+
+        # 优化器
+        optimizer = torch.optim.Adam(self.higashi_model.parameters(), lr=1e-3)
+
+        # 训练
+        self.train(
+            training_data_generator=self.training_data_generator,
+            validation_data_generator=self.validation_data_generator,
+            optimizer=[optimizer],
+            epochs=self.with_nbr_epoch,
+            load_first=False,
+            save_name="_phasing",
+            save_embed=False
+        )
+
+        # 保存
+        torch.save(self.higashi_model, self.save_path + "_phasing_model")
+
+    def phase(self):
+        self.higashi_model = torch.load(self.save_path + "_phasing_model", map_location=self.current_device)
+        self.higashi_model.eval()
+
+        # 加载归一化参数
+        minmax_path = os.path.join(self.temp_dir, "minmax_params.npz")
+        minmax = np.load(minmax_path)
+        cmin, cmax = minmax['min'], minmax['max']
+
+        with torch.no_grad():
+            for chrom in self.chrom_list:
+                c_idx = self.chrom_list.index(chrom)
+                s, e = self.chrom_start_end[c_idx]
+                size = e - s
+
+                for cell in range(self.num[0]):
+                    # 加载归一化后的 C
+                    c_norm = self.fetch_map(chrom, cell)[1].toarray()  # 用 impute 的 C 作为输入
+                    mask = c_norm != 0
+
+                    # 转 tensor
+                    coords = np.column_stack(np.where(mask))
+                    vals = c_norm[mask]
+
+                    x = np.column_stack([np.full(len(coords), cell + 1), coords + s + 1])
+                    x = torch.from_numpy(x).long().to(device)
+                    x_chrom = torch.full((len(x),), c_idx, dtype=torch.long).to(device)
+
+                    # 预测
+                    _, _, _, p, m, _ = self.higashi_model(x, x_chrom)
+                    p = p.cpu().numpy().flatten()
+                    m = m.cpu().numpy().flatten()
+
+                    # 反归一化
+                    p = p * (cmax - cmin) + cmin
+                    m = m * (cmax - cmin) + cmin
+                    p = np.clip(p, 0, None)
+                    m = np.clip(m, 0, None)
+
+                    # 保存
+                    save_path = os.path.join(self.temp_dir, f"{chrom}_phased.hdf5")
+                    with h5py.File(save_path, 'a') as f:
+                        grp = f.require_group(f"cell_{cell}")
+                        grp.create_dataset("Cp", data=p, compression='gzip')
+                        grp.create_dataset("Cm", data=m, compression='gzip')
+                        grp.create_dataset("coordinates", data=coords, compression='gzip')
 
     def impute_no_nbr(self):
         # 	# Loading Stage 2
