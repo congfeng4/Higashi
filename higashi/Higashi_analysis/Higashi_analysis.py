@@ -8,7 +8,11 @@ from scipy.stats import spearmanr, pearsonr, zscore
 try:
     from scipy.stats import PearsonRConstantInputWarning, SpearmanRConstantInputWarning
 except:
-    from scipy.stats import ConstantInputWarning as PearsonRConstantInputWarning
+    try:
+        from scipy.stats import ConstantInputWarning as PearsonRConstantInputWarning
+    except:
+        class PearsonRConstantInputWarning(Exception):
+            pass
 
 import warnings
 from tqdm import trange, tqdm
