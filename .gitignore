@@ -8,3 +8,6 @@ higashi/Higashi_backend/.DS_Store
 /Temp
 __pycache__
 *.txt
+*.err
+*.out
+*.log
