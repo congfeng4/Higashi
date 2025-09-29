@@ -24,7 +24,7 @@ torch.set_default_dtype(torch.float32)
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Higashi main program")
-    parser.add_argument('-c', '--config', type=str, default="../config_dir/config_ramani.JSON")
+    parser.add_argument('-c', '--config', type=str, default="./Data/config_ramani.JSON")
     parser.add_argument('-s', '--start', type=int, default=1)
 
     return parser.parse_args()
