@@ -1,0 +1,129 @@
+First stage training
+[ Epoch 0 of 60 ]
+- (Train)   bce:  0.6200, mse:  0.6536,  acc: 51.117 %, pearson: 0.332, spearman: 0.301, elapse: 239.278 s
+- (Valid) bce:  0.5795,  acc: 71.178 %,pearson: 0.450, spearman: 0.420,elapse: 0.062 s
+update_rate: 0.323610	0.991183	update_rate: 0.000000	0.000000	pair_ratio: 0.1
+[ Epoch 1 of 60 ]
+- (Train)   bce:  0.5570, mse:  0.6278,  acc: 72.565 %, pearson: 0.475, spearman: 0.431, elapse: 100.215 s
+- (Valid) bce:  0.5490,  acc: 78.108 %,pearson: 0.501, spearman: 0.453,elapse: 0.070 s
+update_rate: 0.462310	1.183404	pair_ratio: 0.2
+[ Epoch 2 of 60 ]
+- (Train)   bce:  0.5503, mse:  0.6271,  acc: 78.998 %, pearson: 0.499, spearman: 0.448, elapse: 99.547 s
+- (Valid) bce:  0.5576,  acc: 78.736 %,pearson: 0.509, spearman: 0.436,elapse: 0.061 s
+update_rate: 0.055052	0.171193	pair_ratio: 0.3
+[ Epoch 3 of 60 ]
+- (Train)   bce:  0.5556, mse:  0.6350,  acc: 81.133 %, pearson: 0.500, spearman: 0.446, elapse: 105.958 s
+- (Valid) bce:  0.5725,  acc: 79.393 %,pearson: 0.479, spearman: 0.419,elapse: 0.060 s
+update_rate: 0.020712	0.152145	pair_ratio: 0.4
+[ Epoch 4 of 60 ]
+- (Train)   bce:  0.5597, mse:  0.6327,  acc: 81.679 %, pearson: 0.493, spearman: 0.442, elapse: 109.406 s
+- (Valid) bce:  0.5732,  acc: 81.084 %,pearson: 0.492, spearman: 0.434,elapse: 0.062 s
+update_rate: 0.025315	0.072554	pair_ratio: 0.5
+[ Epoch 5 of 60 ]
+- (Train)   bce:  0.5690, mse:  0.6388,  acc: 81.431 %, pearson: 0.484, spearman: 0.427, elapse: 113.125 s
+- (Valid) bce:  0.5871,  acc: 80.311 %,pearson: 0.465, spearman: 0.409,elapse: 0.060 s
+update_rate: 0.023037	0.071156
+[ Epoch 6 of 60 ]
+- (Train)   bce:  0.5757, mse:  0.6402,  acc: 81.189 %, pearson: 0.474, spearman: 0.417, elapse: 114.832 s
+- (Valid) bce:  0.5689,  acc: 81.883 %,pearson: 0.488, spearman: 0.431,elapse: 0.060 s
+update_rate: 0.018790	0.079158
+[ Epoch 7 of 60 ]
+- (Train)   bce:  0.5745, mse:  0.6508,  acc: 81.471 %, pearson: 0.479, spearman: 0.420, elapse: 110.782 s
+- (Valid) bce:  0.5769,  acc: 79.648 %,pearson: 0.497, spearman: 0.419,elapse: 0.061 s
+update_rate: 0.012780	0.097485
+[ Epoch 8 of 60 ]
+- (Train)   bce:  0.5723, mse:  0.6541,  acc: 81.694 %, pearson: 0.483, spearman: 0.423, elapse: 114.877 s
+- (Valid) bce:  0.5775,  acc: 81.796 %,pearson: 0.471, spearman: 0.420,elapse: 0.062 s
+update_rate: 0.013006	0.106282
+[ Epoch 9 of 60 ]
+- (Train)   bce:  0.5719, mse:  0.6559,  acc: 81.713 %, pearson: 0.483, spearman: 0.424, elapse: 116.507 s
+- (Valid) bce:  0.5807,  acc: 82.495 %,pearson: 0.458, spearman: 0.410,elapse: 0.061 s
+update_rate: 0.019681	0.075177
+[ Epoch 10 of 60 ]
+- (Train)   bce:  0.5717, mse:  0.6567,  acc: 81.750 %, pearson: 0.487, spearman: 0.425, elapse: 112.817 s
+- (Valid) bce:  0.5730,  acc: 81.943 %,pearson: 0.493, spearman: 0.420,elapse: 0.061 s
+update_rate: 0.017702	0.089349
+[ Epoch 11 of 60 ]
+- (Train)   bce:  0.5719, mse:  0.6583,  acc: 81.660 %, pearson: 0.486, spearman: 0.424, elapse: 109.169 s
+- (Valid) bce:  0.5769,  acc: 82.079 %,pearson: 0.458, spearman: 0.409,elapse: 0.061 s
+update_rate: 0.017706	0.098994
+[ Epoch 12 of 60 ]
+- (Train)   bce:  0.5696, mse:  0.6622,  acc: 81.707 %, pearson: 0.488, spearman: 0.427, elapse: 110.827 s
+- (Valid) bce:  0.5768,  acc: 82.207 %,pearson: 0.486, spearman: 0.416,elapse: 0.060 s
+update_rate: 0.012265	0.086191
+[ Epoch 13 of 60 ]
+- (Train)   bce:  0.5691, mse:  0.6645,  acc: 81.688 %, pearson: 0.491, spearman: 0.427, elapse: 111.084 s
+- (Valid) bce:  0.5703,  acc: 82.081 %,pearson: 0.469, spearman: 0.423,elapse: 0.061 s
+update_rate: 0.015923	0.078005
+[ Epoch 14 of 60 ]
+- (Train)   bce:  0.5679, mse:  0.6582,  acc: 81.577 %, pearson: 0.490, spearman: 0.428, elapse: 112.012 s
+- (Valid) bce:  0.5583,  acc: 82.707 %,pearson: 0.501, spearman: 0.436,elapse: 0.060 s
+update_rate: 0.012420	0.086571
+[ Epoch 15 of 60 ]
+- (Train)   bce:  0.5680, mse:  0.6652,  acc: 81.421 %, pearson: 0.491, spearman: 0.428, elapse: 112.233 s
+- (Valid) bce:  0.5561,  acc: 82.368 %,pearson: 0.486, spearman: 0.438,elapse: 0.060 s
+update_rate: 0.014042	0.078117
+[ Epoch 16 of 60 ]
+- (Train)   bce:  0.5668, mse:  0.6651,  acc: 81.388 %, pearson: 0.492, spearman: 0.429, elapse: 116.133 s
+- (Valid) bce:  0.5694,  acc: 81.961 %,pearson: 0.472, spearman: 0.427,elapse: 0.060 s
+update_rate: 0.019243	0.088431
+[ Epoch 17 of 60 ]
+- (Train)   bce:  0.5660, mse:  0.6686,  acc: 81.328 %, pearson: 0.494, spearman: 0.429, elapse: 112.333 s
+- (Valid) bce:  0.5772,  acc: 81.436 %,pearson: 0.472, spearman: 0.418,elapse: 0.060 s
+update_rate: 0.018298	0.104672
+[ Epoch 18 of 60 ]
+- (Train)   bce:  0.5672, mse:  0.6642,  acc: 81.243 %, pearson: 0.492, spearman: 0.428, elapse: 114.358 s
+- (Valid) bce:  0.5607,  acc: 80.582 %,pearson: 0.510, spearman: 0.436,elapse: 0.061 s
+update_rate: 0.015804	0.085566
+[ Epoch 19 of 60 ]
+- (Train)   bce:  0.5660, mse:  0.6691,  acc: 81.129 %, pearson: 0.494, spearman: 0.429, elapse: 113.262 s
+- (Valid) bce:  0.5773,  acc: 81.133 %,pearson: 0.482, spearman: 0.405,elapse: 0.060 s
+update_rate: 0.010316	0.090208
+[ Epoch 20 of 60 ]
+- (Train)   bce:  0.5673, mse:  0.6618,  acc: 81.075 %, pearson: 0.491, spearman: 0.426, elapse: 113.708 s
+- (Valid) bce:  0.5778,  acc: 81.192 %,pearson: 0.480, spearman: 0.410,elapse: 0.060 s
+update_rate: 0.013102	0.124559
+[ Epoch 21 of 60 ]
+- (Train)   bce:  0.5657, mse:  0.6688,  acc: 81.082 %, pearson: 0.494, spearman: 0.430, elapse: 118.102 s
+- (Valid) bce:  0.5783,  acc: 79.928 %,pearson: 0.498, spearman: 0.422,elapse: 0.060 s
+update_rate: 0.012035	0.136802
+[ Epoch 22 of 60 ]
+- (Train)   bce:  0.5657, mse:  0.6615,  acc: 80.989 %, pearson: 0.496, spearman: 0.430, elapse: 115.261 s
+- (Valid) bce:  0.5778,  acc: 82.212 %,pearson: 0.494, spearman: 0.425,elapse: 0.061 s
+update_rate: 0.009110	0.122165
+[ Epoch 23 of 60 ]
+- (Train)   bce:  0.5653, mse:  0.6655,  acc: 80.905 %, pearson: 0.495, spearman: 0.430, elapse: 118.309 s
+- (Valid) bce:  0.5721,  acc: 81.074 %,pearson: 0.497, spearman: 0.439,elapse: 0.060 s
+update_rate: 0.018324	0.116034
+[ Epoch 24 of 60 ]
+- (Train)   bce:  0.5633, mse:  0.6687,  acc: 80.969 %, pearson: 0.497, spearman: 0.432, elapse: 114.273 s
+- (Valid) bce:  0.5783,  acc: 82.791 %,pearson: 0.497, spearman: 0.435,elapse: 0.062 s
+update_rate: 0.012840	0.077932
+[ Epoch 25 of 60 ]
+- (Train)   bce:  0.5633, mse:  0.6707,  acc: 80.708 %, pearson: 0.496, spearman: 0.431, elapse: 116.811 s
+- (Valid) bce:  0.5778,  acc: 80.289 %,pearson: 0.466, spearman: 0.418,elapse: 0.061 s
+update_rate: 0.009049	0.093635
+[ Epoch 26 of 60 ]
+- (Train)   bce:  0.5634, mse:  0.6761,  acc: 80.639 %, pearson: 0.496, spearman: 0.430, elapse: 117.565 s
+- (Valid) bce:  0.5823,  acc: 82.390 %,pearson: 0.456, spearman: 0.409,elapse: 0.061 s
+update_rate: 0.008397	0.091073
+[ Epoch 27 of 60 ]
+- (Train)   bce:  0.5633, mse:  0.6653,  acc: 80.562 %, pearson: 0.495, spearman: 0.430, elapse: 120.426 s
+- (Valid) bce:  0.5713,  acc: 80.994 %,pearson: 0.488, spearman: 0.419,elapse: 0.060 s
+update_rate: 0.007999	0.098258
+[ Epoch 28 of 60 ]
+- (Train)   bce:  0.5629, mse:  0.6748,  acc: 80.462 %, pearson: 0.498, spearman: 0.432, elapse: 117.183 s
+- (Valid) bce:  0.5644,  acc: 80.503 %,pearson: 0.496, spearman: 0.433,elapse: 0.061 s
+update_rate: 0.009067	0.118985
+[ Epoch 29 of 60 ]
+- (Train)   bce:  0.5605, mse:  0.6704,  acc: 80.621 %, pearson: 0.498, spearman: 0.434, elapse: 110.099 s
+- (Valid) bce:  0.5707,  acc: 79.375 %,pearson: 0.473, spearman: 0.418,elapse: 0.059 s
+update_rate: 0.009473	0.114868
+[ Epoch 30 of 60 ]
+- (Train)   bce:  0.5619, mse:  0.6677,  acc: 80.381 %, pearson: 0.498, spearman: 0.433, elapse: 116.966 s
+- (Valid) bce:  0.5691,  acc: 80.505 %,pearson: 0.479, spearman: 0.419,elapse: 0.060 s
+update_rate: 0.012813	0.143748
+[ Epoch 31 of 60 ]
+- (Train)   bce:  0.5618, mse:  0.6695,  acc: 80.454 %, pearson: 0.501, spearman: 0.433, elapse: 118.547 s
+- (Valid) bce:  0.5795,  acc: 80.932 %,pearson: 0.479, spearman: 0.421,elapse: 0.061 s
+update_rate: 0.008810	0.085481
