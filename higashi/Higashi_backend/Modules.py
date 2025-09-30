@@ -779,61 +779,68 @@ class Hyper_SAGNN(nn.Module):
         output_mean_m = self.pff_classifier_m(output)
         output_mean_m = torch.mean(output_mean_m, dim=-2, keepdim=False)
 
-        # Recombined P+M
-        output_mean_sum = output_mean_p + output_mean_m
-        output_mean_sum = output_mean_sum + distance_proba2
-
         output_var = self.pff_classifier_var(static)
         # output_var = torch.sum(output_var * non_pad_mask, dim=-2, keepdim=False)
         # output_var /= mask_sum
         output_var = torch.mean(output_var, dim=-2, keepdim=False)
         output_mean = output_mean + distance_proba2
+        output_mean_p = output_mean_p + distance_proba2
+        output_mean_m = output_mean_m + distance_proba2
         output_var = output_var + distance_proba3
 
-        return output_mean, output_var, output_proba, (output_mean_p, output_mean_m, output_mean_sum)
+        return output_mean, output_var, output_proba, (output_mean_p, output_mean_m)
 
+    @torch.no_grad()
     def predict(self, input, input_chrom, verbose=False, batch_size=96, activation=None, extra_info=None):
         self.eval()
+        output = []
+        output_p, output_m = [], []
+        if verbose:
+            func1 = trange
+        else:
+            func1 = range
+        if batch_size < 0:
+            batch_size = len(input)
         with torch.no_grad():
-            output = []
-            if verbose:
-                func1 = trange
-            else:
-                func1 = range
-            if batch_size < 0:
-                batch_size = len(input)
-            with torch.no_grad():
-                for j in func1(math.ceil(len(input) / batch_size)):
-                    x = input[j * batch_size:min((j + 1) * batch_size, len(input))]
-                    if type(input_chrom) is not tuple:
-                        x_chrom = input_chrom[j * batch_size:min((j + 1) * batch_size, len(input))]
-                        x_chrom = torch.from_numpy(x_chrom).long().to(device, non_blocking=True)
-                    else:
-                        a, b = input_chrom
-                        x_chrom = a[j * batch_size:min((j + 1) * batch_size, len(input))], b[
-                            j * batch_size:min((j + 1) * batch_size, len(input))]
+            for j in func1(math.ceil(len(input) / batch_size)):
+                x = input[j * batch_size:min((j + 1) * batch_size, len(input))]
+                if type(input_chrom) is not tuple:
+                    x_chrom = input_chrom[j * batch_size:min((j + 1) * batch_size, len(input))]
+                    x_chrom = torch.from_numpy(x_chrom).long().to(device, non_blocking=True)
+                else:
+                    a, b = input_chrom
+                    x_chrom = a[j * batch_size:min((j + 1) * batch_size, len(input))], b[
+                        j * batch_size:min((j + 1) * batch_size, len(input))]
 
-                    x = np2tensor_hyper(x, dtype=torch.long)
+                x = np2tensor_hyper(x, dtype=torch.long)
 
-                    if len(x.shape) == 1:
-                        x = pad_sequence(x, batch_first=True, padding_value=0).to(device, non_blocking=True)
-                    else:
-                        x = x.to(device, non_blocking=True)
+                if len(x.shape) == 1:
+                    x = pad_sequence(x, batch_first=True, padding_value=0).to(device, non_blocking=True)
+                else:
+                    x = x.to(device, non_blocking=True)
 
-                    o, _, o_proba = self(x, x_chrom)
+                o, _, o_proba, (o_p, o_m) = self(x, x_chrom)
 
-                    if activation is not None:
-                        o = activation(o)
+                if activation is not None:
+                    o = activation(o)
+                    o_p = activation(o_p)
+                    o_m = activation(o_m)
 
-                    if extra_info is not None:
-                        o = o * extra_info[x[:, 2] - x[:, 1]]
+                if extra_info is not None:
+                    o = o * extra_info[x[:, 2] - x[:, 1]]
+                    o_p = o_p * extra_info[x[:, 2] - x[:, 1]]
+                    o_m = o_m * extra_info[x[:, 2] - x[:, 1]]
 
-                    output.append(o.detach().cpu())
+                output.append(o.detach().cpu())
+                output_p.append(o_p.detach().cpu())
+                output_m.append(o_m.detach().cpu())
 
-            output = torch.cat(output, dim=0)
-            torch.cuda.empty_cache()
+        output = torch.cat(output, dim=0)
+        output_p = torch.cat(output_p, dim=0)
+        output_m = torch.cat(output_m, dim=0)
+        torch.cuda.empty_cache()
         self.train()
-        return output.numpy()
+        return output.numpy(), output_p.numpy(), output_m.numpy()
 
 
 # A custom position-wise MLP.
