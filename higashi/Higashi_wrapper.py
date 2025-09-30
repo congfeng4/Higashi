@@ -714,7 +714,6 @@ class Higashi():
                 print("contractive loss")
                 self.contractive_flag = True
                 self.contractive_loss_weight = 1e-3
-
             else:
                 if self.median_total_sparsity_cell >= 0.05:
                     print("contractive loss")
@@ -863,14 +862,14 @@ class Higashi():
 
     def forward_batch_hyperedge(self, batch_data, batch_weight, batch_chrom, batch_to_neighs, y,
                                 chroms_in_batch):
+        global steps
         model = self.higashi_model
         x = batch_data
         w = batch_weight
         # plus one, because chr1 - id 0 - NN1
         # pred, pred_var, pred_proba = model(x, (batch_chrom, batch_to_neighs), chroms_in_batch=chroms_in_batch + 1)
-        pred, pred_var, pred_proba, (pred_p, pred_m, pred_sum) = model(x, (batch_chrom, batch_to_neighs),\
-                                                                     chroms_in_batch=chroms_in_batch + 1)
-
+        pred, pred_var, pred_proba, (pred_p, pred_m, pred_sum) = model(x, (batch_chrom, batch_to_neighs),
+                                                                       chroms_in_batch=chroms_in_batch + 1)
         if self.use_recon:
             adj = self.node_embedding_init.embeddings[0](self.cell_ids).float()
             targets = self.node_embedding_init.targets[0](self.cell_ids).float()
@@ -897,13 +896,11 @@ class Higashi():
                     mask_w_eq_zero = w == 0
                     makeitzero = F.mse_loss(w[mask_w_eq_zero].float(), pred[mask_w_eq_zero].float())
                     mse_loss += makeitzero
-
         elif self.mode == 'zinb':
             pred = F.softplus(pred)
             extra = (self.cell_feats1[batch_data[:, 0] - 1]).view(-1, 1)
             pred = pred * extra
             pred_var = F.softplus(pred_var)
-
             pred = torch.clamp(pred, min=1e-8, max=1e8)
             pred_var = torch.clamp(pred_var, min=1e-8, max=1e8)
             main_loss = -log_zinb_positive(w.float(), pred.float(), pred_var.float(), pred_proba.float())
@@ -912,19 +909,21 @@ class Higashi():
             pred = pred.float().view(-1)
             w = w.float().view(-1)
             main_loss = F.mse_loss(pred, w)
-        elif self.mode == 'phasing':
+        else:
+            print("wrong mode", self.mode)
+            raise EOFError(self.mode)
+
+        if steps == 4:
             pred = F.softplus(pred_sum)
             extra = (self.cell_feats1[batch_data[:, 0] - 1]).view(-1, 1)
             pred = pred * extra
             pred_var = F.softplus(pred_var)
-
             pred = torch.clamp(pred, min=1e-8, max=1e8)
             pred_var = torch.clamp(pred_var, min=1e-8, max=1e8)
-            main_loss = -log_zinb_positive(w.float(), pred.float(), pred_var.float(), pred_proba.float())
-            main_loss = main_loss.mean()
-        else:
-            print("wrong mode", self.mode)
-            raise EOFError
+            phase_loss = -log_zinb_positive(w.float(), pred.float(), pred_var.float(), pred_proba.float())
+            phase_loss = phase_loss.mean()
+            main_loss += phase_loss
+
         return pred, main_loss, mse_loss
 
     def train_epoch(self, training_data_generator, optimizer_list, train_pool, train_p_list):
@@ -974,13 +973,11 @@ class Higashi():
                                                                         batch_edge_weight, batch_chrom,
                                                                         batch_to_neighs, y=batch_y,
                                                                         chroms_in_batch=chroms_in_batch)
-
                 y_list.append(batch_y.detach().cpu())
                 w_list.append(batch_edge_weight.detach().cpu())
                 pred_list.append(pred.detach().cpu())
 
                 final_batch_num += 1
-
                 if self.use_recon:
                     for opt in optimizer_list:
                         opt.zero_grad(set_to_none=True)
@@ -1005,10 +1002,8 @@ class Higashi():
                             contractive_loss += torch.sum(self.node_embedding_init.wstack[0].weight_list[i] ** 2)
                             contractive_loss += torch.sum(
                                 self.node_embedding_init.wstack[0].reverse_weight_list[i] ** 2)
-
                     else:
                         contractive_loss = 0.0
-
                 else:
                     contractive_loss = 0.0
                     ratio = 0.0
@@ -1501,52 +1496,64 @@ class Higashi():
         # 保存
         torch.save(self.higashi_model, self.save_path + "_phasing_model")
 
-    def phase(self):
+    @torch.no_grad()
+    def phase(self, scale_factor=1.0):
+        """
+        将每个细胞、每条染色体的 Hi-C 矩阵拆成父本 Cp 与母本 Cm
+        无需归一化，softplus 保证非负，结果存为稀疏 CSR
+        """
+        from scipy.sparse import csr_matrix
+
         self.higashi_model = torch.load(self.save_path + "_phasing_model", map_location=self.current_device)
         self.higashi_model.eval()
 
-        # 加载归一化参数
-        minmax_path = os.path.join(self.temp_dir, "minmax_params.npz")
-        minmax = np.load(minmax_path)
-        cmin, cmax = minmax['min'], minmax['max']
+        res = self.res
+        chrom_start_end = np.load(os.path.join(self.temp_dir, "chrom_start_end.npy"))
 
-        with torch.no_grad():
-            for chrom in self.chrom_list:
-                c_idx = self.chrom_list.index(chrom)
-                s, e = self.chrom_start_end[c_idx]
-                size = e - s
-
+        for c_idx, chrom in enumerate(self.chrom_list):
+            s, e = chrom_start_end[c_idx]
+            size = e - s
+            save_path = os.path.join(self.temp_dir, f"{chrom}_phased.hdf5")
+            with h5py.File(save_path, "w") as fh:
+                fh.create_dataset("bins", data=np.arange(size) * res)  # 基因组坐标
                 for cell in range(self.num[0]):
-                    # 加载归一化后的 C
-                    c_norm = self.fetch_map(chrom, cell)[1].toarray()  # 用 impute 的 C 作为输入
-                    mask = c_norm != 0
+                    # 1. 取出原始 Hi-C 稀疏矩阵（counts）
+                    raw_csr = self.fetch_map(chrom, cell)[0].astype(np.float32)  # CSR
+                    rows, cols = raw_csr.nonzero()
+                    counts = raw_csr.data
+                    if len(counts) == 0:
+                        # 空矩阵
+                        fh.create_dataset(f"cell_{cell}/Cp", data=raw_csr, compression="gzip")
+                        fh.create_dataset(f"cell_{cell}/Cm", data=raw_csr, compression="gzip")
+                        fh.create_dataset(f"cell_{cell}/C", data=raw_csr, compression="gzip")
+                        continue
 
-                    # 转 tensor
-                    coords = np.column_stack(np.where(mask))
-                    vals = c_norm[mask]
-
-                    x = np.column_stack([np.full(len(coords), cell + 1), coords + s + 1])
+                    # 2. 组装超图输入
+                    x = np.column_stack([np.full(len(rows), cell + 1),
+                                         rows + s + 1,
+                                         cols + s + 1])
                     x = torch.from_numpy(x).long().to(device)
                     x_chrom = torch.full((len(x),), c_idx, dtype=torch.long).to(device)
 
-                    # 预测
+                    # 3. 预测 → softplus → 乘 scale
                     _, _, _, p, m, _ = self.higashi_model(x, x_chrom)
-                    p = p.cpu().numpy().flatten()
-                    m = m.cpu().numpy().flatten()
+                    p = F.softplus(p).cpu().numpy().flatten() * scale_factor
+                    m = F.softplus(m).cpu().numpy().flatten() * scale_factor
 
-                    # 反归一化
-                    p = p * (cmax - cmin) + cmin
-                    m = m * (cmax - cmin) + cmin
-                    p = np.clip(p, 0, None)
-                    m = np.clip(m, 0, None)
+                    # 4. 按比例拆分原始 counts：  Cp + Cm = C
+                    total_pred = p + m + 1e-8
+                    cp_data = counts * (p / total_pred)
+                    cm_data = counts * (m / total_pred)
 
-                    # 保存
-                    save_path = os.path.join(self.temp_dir, f"{chrom}_phased.hdf5")
-                    with h5py.File(save_path, 'a') as f:
-                        grp = f.require_group(f"cell_{cell}")
-                        grp.create_dataset("Cp", data=p, compression='gzip')
-                        grp.create_dataset("Cm", data=m, compression='gzip')
-                        grp.create_dataset("coordinates", data=coords, compression='gzip')
+                    # 5. 存回稀疏 CSR
+                    cp_csr = csr_matrix((cp_data, (rows, cols)), shape=(size, size))
+                    cm_csr = csr_matrix((cm_data, (rows, cols)), shape=(size, size))
+                    cp_csr = cp_csr + cp_csr.T
+                    cm_csr = cm_csr + cm_csr.T
+
+                    fh.create_dataset(f"cell_{cell}/Cp", data=cp_csr, compression="gzip")
+                    fh.create_dataset(f"cell_{cell}/Cm", data=cm_csr, compression="gzip")
+                    fh.create_dataset(f"cell_{cell}/C", data=raw_csr, compression="gzip")
 
     def impute_no_nbr(self):
         # 	# Loading Stage 2

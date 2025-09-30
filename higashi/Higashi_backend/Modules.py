@@ -781,7 +781,7 @@ class Hyper_SAGNN(nn.Module):
 
         # Recombined P+M
         output_mean_sum = output_mean_p + output_mean_m
-        output_mean_sum = output_mean_sum + distance_proba
+        output_mean_sum = output_mean_sum + distance_proba2
 
         output_var = self.pff_classifier_var(static)
         # output_var = torch.sum(output_var * non_pad_mask, dim=-2, keepdim=False)
