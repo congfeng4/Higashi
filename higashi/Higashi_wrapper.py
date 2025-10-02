@@ -979,7 +979,7 @@ class Higashi():
                     batch_to_neighs_big[j]
 
                 pred, loss_bce, loss_mse = self.forward_batch_hyperedge(batch_edge,
-                                                                        batch_edge_weight, batch_fom,
+                                                                        batch_edge_weight, batch_chrom,
                                                                         batch_to_neighs, y=batch_y,
                                                                         chroms_in_batch=chroms_in_batch)
                 y_list.append(batch_y.detach().cpu())
